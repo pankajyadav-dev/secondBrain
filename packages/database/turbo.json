@@ -1,0 +1,10 @@
+{
+    "extends": [
+        "//"
+    ],
+    "tasks": {
+        "db:generate": {
+            "cache": false
+        }
+    }
+}

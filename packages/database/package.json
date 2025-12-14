@@ -1,0 +1,22 @@
+{
+  "name": "@repo/database",
+  "version": "0.0.0",
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev ",
+    "db:deploy": "prisma migrate deploy"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.1.0",
+    "@prisma/client": "^7.1.0",
+    "dotenv": "^17.2.3",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.16.0",
+    "prisma": "^7.1.0"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

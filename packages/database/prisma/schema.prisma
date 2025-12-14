@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  folders   Folder[]
+  notes     Notes[]
+  createdAt DateTime @default(now())
+}
+
+model Folder {
+  id        Int      @id @default(autoincrement())
+  authorId  Int
+  name      String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  notes     Notes[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([authorId, name])
+  @@index([authorId])
+}
+
+model Notes {
+  id        Int      @id @default(autoincrement())
+  authorId  Int
+  folderId  Int
+  title     String
+  content   String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent    Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([folderId, title, authorId])
+  @@index([folderId, authorId])
+}
