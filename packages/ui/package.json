@@ -3,20 +3,28 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
+    "./styles.css": "./dist/index.css",
     "./*": "./src/*.tsx"
   },
   "scripts": {
+    "build:styles": "tailwindcss -i ./src/styles.css -o ./dist/index.css",
+    "build:components": "tsc",
+    "dev:styles": "tailwindcss -i ./src/styles.css -o ./dist/index.css --watch",
+    "dev:components": "tsc --watch",
     "lint": "eslint . --max-warnings 0",
     "generate:component": "turbo gen react-component",
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
+    "@repo/tailwind-config": "*",
     "@repo/typescript-config": "*",
+    "@tailwindcss/cli": "^4.1.18",
     "@types/node": "^22.15.3",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "eslint": "^9.39.1",
+    "tailwindcss": "^4.1.18",
     "typescript": "5.9.2"
   },
   "dependencies": {
