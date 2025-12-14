@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2, FileText, Sparkles, Trash2, MessageSquare } from "lucide-react";
+import { Send, Bot, User, Loader2, FileText, Sparkles, Trash2, MessageSquare, X } from "lucide-react";
 import { Button } from "@repo/ui/Button";
 import { cn } from "../../../packages/ui/utils/cn";
 import { Textarea } from "@repo/ui/Input";
@@ -9,6 +9,8 @@ import { Textarea } from "@repo/ui/Input";
 
 interface AIChatSidebarProps {
     contextContent: string;
+    isOpen?: boolean;
+    onToggle?: () => void;
 }
 
 interface Message {
@@ -17,7 +19,7 @@ interface Message {
     timestamp: Date;
 }
 
-export function AIChatSidebar({ contextContent }: AIChatSidebarProps) {
+export function AIChatSidebar({ contextContent, isOpen = true, onToggle }: AIChatSidebarProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
@@ -92,36 +94,52 @@ export function AIChatSidebar({ contextContent }: AIChatSidebarProps) {
         : contextContent.replace(/<[^>]*>/g, '').length;
 
     return (
-        <div className="w-96 border-l border-white/10 glass-card flex flex-col h-screen animate-slide-in-up">
+        <div className={cn(
+            "border-l border-white/10 glass-card flex flex-col h-screen animate-slide-in-up",
+            "w-full lg:w-96",
+            !isOpen && "hidden lg:flex"
+        )}>
             {/* Header */}
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+            <div className="p-3 sm:p-4 border-b border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
-                        <Sparkles size={16} className="text-white" />
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-primary flex items-center justify-center">
+                        <Sparkles size={14} className="sm:w-4 sm:h-4 text-white" />
                     </div>
                     <div>
-                        <h2 className="font-bold text-white">AI Assistant</h2>
-                        <p className="text-xs text-muted-foreground">Ask about your notes</p>
+                        <h2 className="font-bold text-sm sm:text-base text-white">AI Assistant</h2>
+                        <p className="text-xs text-muted-foreground hidden sm:block">Ask about your notes</p>
                     </div>
                 </div>
-                {messages.length > 0 && (
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearChat}
-                        className="h-8"
-                    >
-                        <Trash2 size={14} />
-                    </Button>
-                )}
+                <div className="flex items-center gap-2">
+                    {messages.length > 0 && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearChat}
+                            className="h-7 sm:h-8 w-7 sm:w-8 p-0"
+                        >
+                            <Trash2 size={14} />
+                        </Button>
+                    )}
+                    {onToggle && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={onToggle}
+                            className="lg:hidden h-7 sm:h-8 w-7 sm:w-8 p-0"
+                        >
+                            <X size={14} />
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4" ref={scrollRef}>
                 {messages.length === 0 && (
-                    <div className="text-center text-muted-foreground text-sm mt-16 space-y-4 animate-fade-in">
-                        <div className="w-16 h-16 rounded-full bg-gradient-primary/20 flex items-center justify-center mx-auto">
-                            <MessageSquare size={32} className="text-primary" />
+                    <div className="text-center text-muted-foreground text-sm mt-8 sm:mt-16 space-y-3 sm:space-y-4 animate-fade-in">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-primary/20 flex items-center justify-center mx-auto">
+                            <MessageSquare size={24} className="sm:w-8 sm:h-8 text-primary" />
                         </div>
                         <div>
                             <p className="font-medium">Start a conversation</p>
@@ -142,13 +160,13 @@ export function AIChatSidebar({ contextContent }: AIChatSidebarProps) {
                     <div
                         key={i}
                         className={cn(
-                            "flex gap-3 animate-slide-in-up",
+                            "flex gap-2 sm:gap-3 animate-slide-in-up",
                             msg.role === "user" ? "justify-end" : "justify-start"
                         )}
                     >
                         {msg.role === "assistant" && (
-                            <div className="w-7 h-7 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0">
-                                <Bot size={14} className="text-white" />
+                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0">
+                                <Bot size={12} className="sm:w-[14px] sm:h-[14px] text-white" />
                             </div>
                         )}
 
@@ -157,7 +175,7 @@ export function AIChatSidebar({ contextContent }: AIChatSidebarProps) {
                             msg.role === "user" && "items-end"
                         )}>
                             <div className={cn(
-                                "p-3 rounded-2xl text-sm leading-relaxed",
+                                "p-2 sm:p-3 rounded-2xl text-xs sm:text-sm leading-relaxed",
                                 msg.role === "user"
                                     ? "bg-primary text-white"
                                     : "glass-card text-gray-200"
@@ -170,43 +188,44 @@ export function AIChatSidebar({ contextContent }: AIChatSidebarProps) {
                         </div>
 
                         {msg.role === "user" && (
-                            <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                                <User size={14} className="text-muted-foreground" />
+                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                <User size={12} className="sm:w-[14px] sm:h-[14px] text-muted-foreground" />
                             </div>
                         )}
                     </div>
                 ))}
 
                 {loading && (
-                    <div className="flex gap-3 justify-start animate-slide-in-up">
-                        <div className="w-7 h-7 rounded-full bg-gradient-primary flex items-center justify-center">
-                            <Bot size={14} className="text-white" />
+                    <div className="flex gap-2 sm:gap-3 justify-start animate-slide-in-up">
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-primary flex items-center justify-center">
+                            <Bot size={12} className="sm:w-[14px] sm:h-[14px] text-white" />
                         </div>
-                        <div className="glass-card p-3 rounded-2xl">
-                            <Loader2 size={16} className="animate-spin text-primary" />
+                        <div className="glass-card p-2 sm:p-3 rounded-2xl">
+                            <Loader2 size={14} className="sm:w-4 sm:h-4 animate-spin text-primary" />
                         </div>
                     </div>
                 )}
             </div>
 
             {/* Input Area */}
-            <div className="p-4 border-t border-white/10 space-y-3">
+            <div className="p-3 sm:p-4 border-t border-white/10 space-y-2 sm:space-y-3">
                 {/* Context Toggle & Info */}
                 <div className="flex items-center justify-between text-xs">
                     <button
                         onClick={() => setUseSelection(!useSelection)}
                         className={cn(
-                            "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-smooth border",
+                            "flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg transition-smooth border text-xs",
                             useSelection
                                 ? "glass-card text-primary border-primary/30"
                                 : "glass border-transparent text-muted-foreground hover:text-white"
                         )}
                     >
                         <FileText size={12} />
-                        <span>{useSelection ? "Using Selected Text" : "Using Full Note"}</span>
+                        <span className="hidden sm:inline">{useSelection ? "Using Selected Text" : "Using Full Note"}</span>
+                        <span className="sm:hidden">{useSelection ? "Selection" : "Full Note"}</span>
                     </button>
 
-                    <span className="text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                         {contextSize} chars
                     </span>
                 </div>
@@ -214,7 +233,7 @@ export function AIChatSidebar({ contextContent }: AIChatSidebarProps) {
                 {/* Input */}
                 <div className="relative">
                     <Textarea
-                        className="pr-12 resize-none"
+                        className="pr-12 resize-none text-sm"
                         placeholder="Ask AI about your note..."
                         rows={3}
                         value={input}
@@ -231,13 +250,13 @@ export function AIChatSidebar({ contextContent }: AIChatSidebarProps) {
                         disabled={loading || !input.trim()}
                         variant="primary"
                         size="sm"
-                        className="absolute right-2 bottom-2 rounded-lg"
+                        className="absolute right-2 bottom-2 rounded-lg h-7 w-7 p-0"
                     >
-                        <Send size={14} />
+                        <Send size={12} />
                     </Button>
                 </div>
 
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-xs text-muted-foreground text-center hidden sm:block">
                     Press Enter to send, Shift+Enter for new line
                 </p>
             </div>

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
     Folder as FolderIcon,
     FileText,
@@ -12,7 +12,10 @@ import {
     Search,
     MoreVertical,
     LogOut,
-    User
+    Menu,
+    X,
+    Loader2,
+    AlertCircle
 } from "lucide-react";
 
 import { signOut, useSession } from "next-auth/react";
@@ -22,16 +25,24 @@ import { Input } from "@repo/ui/Input";
 import { cn } from "../../../packages/ui/utils/cn";
 import { Badge } from "@repo/ui/Badge";
 import { ConfirmDialog } from "@repo/ui/Dialog";
+import { useDebounce } from "../hooks/useDebounce";
 
 interface Folder {
-    _id: string;
+    id: number;
     name: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 interface Note {
-    _id: string;
+    id: number;
     title: string;
-    folderId?: string;
+    folderId: number;
+    updatedAt: string;
+}
+
+interface ApiError {
+    error: string;
 }
 
 export function AppSidebar() {
@@ -40,6 +51,11 @@ export function AppSidebar() {
     const [searchQuery, setSearchQuery] = useState("");
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     const [newFolderName, setNewFolderName] = useState("");
+    const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const [isLoadingFolders, setIsLoadingFolders] = useState(true);
+    const [isLoadingNotes, setIsLoadingNotes] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [isCreatingNote, setIsCreatingNote] = useState(false);
 
     // Context menu state
     const [contextMenu, setContextMenu] = useState<{ x: number; y: number; folderId: string } | null>(null);
@@ -51,95 +67,219 @@ export function AppSidebar() {
 
     const router = useRouter();
     const searchParams = useSearchParams();
+    const pathname = usePathname();
     const selectedFolderId = searchParams.get("folderId");
     const { data: session } = useSession();
 
+    // Debounce search query
+    const debouncedSearch = useDebounce(searchQuery, 300);
+
+    // Fetch folders with error handling
+    const fetchFolders = useCallback(async () => {
+        setIsLoadingFolders(true);
+        setError(null);
+        try {
+            const res = await fetch("/api/folders");
+            if (!res.ok) {
+                const errorData: ApiError = await res.json().catch(() => ({ error: "Failed to fetch folders" }));
+                throw new Error(errorData.error || "Failed to fetch folders");
+            }
+            const data = await res.json();
+            setFolders(data);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to fetch folders";
+            setError(errorMessage);
+            console.error("Error fetching folders:", err);
+        } finally {
+            setIsLoadingFolders(false);
+        }
+    }, []);
+
+    // Fetch notes with error handling
+    const fetchNotes = useCallback(async (folderId: string | null) => {
+        setIsLoadingNotes(true);
+        setError(null);
+        try {
+            const url = folderId ? `/api/notes?folderId=${folderId}` : "/api/notes";
+            const res = await fetch(url);
+            if (!res.ok) {
+                const errorData: ApiError = await res.json().catch(() => ({ error: "Failed to fetch notes" }));
+                throw new Error(errorData.error || "Failed to fetch notes");
+            }
+            const data = await res.json();
+            setNotes(data);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to fetch notes";
+            setError(errorMessage);
+            console.error("Error fetching notes:", err);
+        } finally {
+            setIsLoadingNotes(false);
+        }
+    }, []);
+
     useEffect(() => {
         fetchFolders();
+    }, [fetchFolders]);
+
+    useEffect(() => {
         fetchNotes(selectedFolderId);
-    }, [selectedFolderId]);
-
-    const fetchFolders = async () => {
-        const res = await fetch("/api/folders");
-        if (res.ok) setFolders(await res.json());
-    };
-
-    const fetchNotes = async (folderId: string | null) => {
-        const url = folderId ? `/api/notes?folderId=${folderId}` : "/api/notes";
-        const res = await fetch(url);
-        if (res.ok) setNotes(await res.json());
-    };
+    }, [selectedFolderId, fetchNotes]);
 
     const createFolder = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newFolderName.trim()) return;
 
-        const res = await fetch("/api/folders", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: newFolderName }),
-        });
+        const trimmedName = newFolderName.trim();
+        setError(null);
 
-        if (res.ok) {
+        // Optimistic update
+        const tempId = Date.now();
+        const optimisticFolder: Folder = {
+            id: tempId,
+            name: trimmedName,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+        setFolders(prev => [optimisticFolder, ...prev]);
+
+        try {
+            const res = await fetch("/api/folders", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: trimmedName }),
+            });
+
+            if (!res.ok) {
+                const errorData: ApiError = await res.json().catch(() => ({ error: "Failed to create folder" }));
+                throw new Error(errorData.error || "Failed to create folder");
+            }
+
+            const newFolder = await res.json();
+            setFolders(prev => prev.map(f => f.id === tempId ? newFolder : f));
             setNewFolderName("");
             setIsCreatingFolder(false);
-            fetchFolders();
+        } catch (err) {
+            // Revert optimistic update
+            setFolders(prev => prev.filter(f => f.id !== tempId));
+            const errorMessage = err instanceof Error ? err.message : "Failed to create folder";
+            setError(errorMessage);
+            console.error("Error creating folder:", err);
         }
     };
 
     const createNote = async () => {
-        const res = await fetch("/api/notes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title: "Untitled Note", folderId: selectedFolderId }),
-        });
+        if (isCreatingNote) return;
 
-        if (res.ok) {
+        setIsCreatingNote(true);
+        setError(null);
+
+        try {
+            const res = await fetch("/api/notes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: "Untitled Note",
+                    folderId: selectedFolderId ? parseInt(selectedFolderId) : undefined
+                }),
+            });
+
+            if (!res.ok) {
+                const errorData: ApiError = await res.json().catch(() => ({ error: "Failed to create note" }));
+                throw new Error(errorData.error || "Failed to create note");
+            }
+
             const note = await res.json();
-            router.push(`/editor/${note._id}`);
+            router.push(`/editor/${note.id}`);
             fetchNotes(selectedFolderId);
+            setIsMobileOpen(false);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to create note";
+            setError(errorMessage);
+            console.error("Error creating note:", err);
+        } finally {
+            setIsCreatingNote(false);
         }
     };
 
     const handleFolderContextMenu = (e: React.MouseEvent, folderId: string) => {
         e.preventDefault();
+        e.stopPropagation();
         setContextMenu({ x: e.clientX, y: e.clientY, folderId });
     };
 
     const handleRenameFolder = async () => {
         if (!renameDialog.folderId || !renameFolderName.trim()) return;
 
-        const res = await fetch(`/api/folders/${renameDialog.folderId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: renameFolderName }),
-        });
+        const trimmedName = renameFolderName.trim();
+        const folderId = renameDialog.folderId;
+        setError(null);
 
-        if (res.ok) {
+        // Optimistic update
+        const originalFolders = [...folders];
+        setFolders(prev => prev.map(f =>
+            f.id.toString() === folderId ? { ...f, name: trimmedName } : f
+        ));
+
+        try {
+            const res = await fetch(`/api/folders/${folderId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: trimmedName }),
+            });
+
+            if (!res.ok) {
+                const errorData: ApiError = await res.json().catch(() => ({ error: "Failed to rename folder" }));
+                throw new Error(errorData.error || "Failed to rename folder");
+            }
+
             fetchFolders();
             setRenameDialog({ open: false });
             setRenameFolderName("");
+        } catch (err) {
+            // Revert optimistic update
+            setFolders(originalFolders);
+            const errorMessage = err instanceof Error ? err.message : "Failed to rename folder";
+            setError(errorMessage);
+            console.error("Error renaming folder:", err);
         }
     };
 
     const handleDeleteFolder = async () => {
         if (!deleteDialog.folderId) return;
 
-        const res = await fetch(`/api/folders/${deleteDialog.folderId}`, {
-            method: "DELETE",
-        });
+        const folderId = deleteDialog.folderId;
+        setError(null);
 
-        if (res.ok) {
-            fetchFolders();
-            if (selectedFolderId === deleteDialog.folderId) {
+        // Optimistic update
+        const originalFolders = [...folders];
+        setFolders(prev => prev.filter(f => f.id.toString() !== folderId));
+
+        try {
+            const res = await fetch(`/api/folders/${folderId}`, {
+                method: "DELETE",
+            });
+
+            if (!res.ok) {
+                const errorData: ApiError = await res.json().catch(() => ({ error: "Failed to delete folder" }));
+                throw new Error(errorData.error || "Failed to delete folder");
+            }
+
+            if (selectedFolderId === folderId) {
                 router.push("/dashboard");
             }
             setDeleteDialog({ open: false });
+            fetchFolders();
+        } catch (err) {
+            // Revert optimistic update
+            setFolders(originalFolders);
+            const errorMessage = err instanceof Error ? err.message : "Failed to delete folder";
+            setError(errorMessage);
+            console.error("Error deleting folder:", err);
         }
     };
 
     const getContextMenuItems = (folderId: string): ContextMenuItem[] => {
-        const folder = folders.find(f => f._id === folderId);
+        const folder = folders.find(f => f.id.toString() === folderId);
         return [
             {
                 label: "Rename",
@@ -161,114 +301,178 @@ export function AppSidebar() {
     };
 
     // Filter notes based on search
-    const filteredNotes = notes.filter(note =>
-        note.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredNotes = useMemo(() => {
+        if (!debouncedSearch) return notes;
+        const query = debouncedSearch.toLowerCase();
+        return notes.filter(note =>
+            note.title.toLowerCase().includes(query)
+        );
+    }, [notes, debouncedSearch]);
 
     // Count notes per folder
-    const getNotesCount = (folderId: string) => {
-        return notes.filter(n => n.folderId === folderId).length;
-    };
+    const getNotesCount = useCallback((folderId: string) => {
+        const folderIdNum = parseInt(folderId);
+        return notes.filter(n => n.folderId === folderIdNum).length;
+    }, [notes]);
 
-    return (
+    // Check if current path is editor
+    const isEditorPage = pathname?.startsWith("/editor");
+
+    const sidebarContent = (
         <>
-            <div className="w-72 border-r border-white/10 glass-card h-screen flex flex-col animate-slide-in-up">
-                {/* Header */}
-                <div className="p-4 border-b border-white/10 flex justify-between items-center">
-                    <div>
-                        <h1 className="font-bold text-xl bg-gradient-primary bg-clip-text text-transparent">
-                            Second Brain
-                        </h1>
-                        <p className="text-xs text-muted-foreground mt-0.5">Organize your thoughts</p>
-                    </div>
+            {/* Header */}
+            <div className="p-3 sm:p-4 border-b border-white/10 flex justify-between items-center">
+                <div className="min-w-0 flex-1">
+                    <h1 className="font-bold text-lg sm:text-xl bg-gradient-primary bg-clip-text text-transparent truncate">
+                        Second Brain
+                    </h1>
+                    <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">Organize your thoughts</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
                     <Button
                         onClick={createNote}
                         size="sm"
                         variant="primary"
-                        className="rounded-full w-9 h-9 p-0"
+                        disabled={isCreatingNote}
+                        className="rounded-full w-8 h-8 sm:w-9 sm:h-9 p-0"
+                        title="Create new note"
                     >
-                        <Plus size={18} />
+                        {isCreatingNote ? (
+                            <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                            <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
+                        )}
+                    </Button>
+                    <Button
+                        onClick={() => setIsMobileOpen(false)}
+                        variant="ghost"
+                        size="sm"
+                        className="lg:hidden rounded-full w-8 h-8 p-0"
+                    >
+                        <X size={16} />
                     </Button>
                 </div>
+            </div>
 
-                {/* Search */}
-                <div className="p-3 border-b border-white/10">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                        <Input
-                            placeholder="Search notes..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 h-9"
-                        />
-                    </div>
+            {/* Error Message */}
+            {error && (
+                <div className="mx-3 mt-3 p-2 glass-card border border-destructive/30 rounded-lg flex items-center gap-2 text-sm text-destructive animate-slide-in-down">
+                    <AlertCircle size={16} />
+                    <span className="flex-1 truncate">{error}</span>
+                    <button
+                        onClick={() => setError(null)}
+                        className="hover:bg-white/10 rounded p-1 transition-smooth"
+                    >
+                        <X size={14} />
+                    </button>
                 </div>
+            )}
 
-                {/* Folders & Notes */}
-                <div className="flex-1 overflow-y-auto p-3">
-                    {/* Folders Section */}
-                    <div className="mb-6">
-                        <div className="flex justify-between items-center px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Folders
-                            <button
-                                onClick={() => setIsCreatingFolder(true)}
-                                className="hover:text-white transition-smooth"
-                            >
-                                <Plus size={14} />
-                            </button>
+            {/* Search */}
+            <div className="p-3 border-b border-white/10">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                    <Input
+                        placeholder="Search notes..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9 h-9 text-sm"
+                    />
+                </div>
+            </div>
+
+            {/* Folders & Notes */}
+            <div className="flex-1 overflow-y-auto p-3">
+                {/* Folders Section */}
+                <div className="mb-6">
+                    <div className="flex justify-between items-center px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        <span>Folders</span>
+                        <button
+                            onClick={() => setIsCreatingFolder(true)}
+                            className="hover:text-white transition-smooth p-1 rounded"
+                            title="Create folder"
+                        >
+                            <Plus size={14} />
+                        </button>
+                    </div>
+
+                    {isCreatingFolder && (
+                        <form onSubmit={createFolder} className="px-2 mb-2">
+                            <Input
+                                autoFocus
+                                placeholder="Folder name..."
+                                value={newFolderName}
+                                onChange={e => setNewFolderName(e.target.value)}
+                                onBlur={() => {
+                                    if (!newFolderName.trim()) setIsCreatingFolder(false);
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Escape") {
+                                        setIsCreatingFolder(false);
+                                        setNewFolderName("");
+                                    }
+                                }}
+                                className="h-8 text-sm"
+                            />
+                        </form>
+                    )}
+
+                    {isLoadingFolders ? (
+                        <div className="px-3 py-6 flex items-center justify-center">
+                            <Loader2 size={20} className="animate-spin text-primary" />
                         </div>
-
-                        {isCreatingFolder && (
-                            <form onSubmit={createFolder} className="px-2 mb-2">
-                                <Input
-                                    autoFocus
-                                    placeholder="Folder name..."
-                                    value={newFolderName}
-                                    onChange={e => setNewFolderName(e.target.value)}
-                                    onBlur={() => {
-                                        if (!newFolderName.trim()) setIsCreatingFolder(false);
-                                    }}
-                                    className="h-8 text-sm"
-                                />
-                            </form>
-                        )}
-
+                    ) : (
                         <div className="space-y-1">
-                            {folders.map(folder => (
-                                <div
-                                    key={folder._id}
-                                    onContextMenu={(e) => handleFolderContextMenu(e, folder._id)}
-                                    className="relative group"
-                                >
-                                    <Link
-                                        href={`/dashboard?folderId=${folder._id}`}
-                                        className={cn(
-                                            "flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-smooth",
-                                            selectedFolderId === folder._id
-                                                ? "glass-card text-white"
-                                                : "text-gray-400 hover:text-white hover:bg-white/5"
-                                        )}
+                            {folders.map(folder => {
+                                const folderIdStr = folder.id.toString();
+                                const isSelected = selectedFolderId === folderIdStr;
+                                return (
+                                    <div
+                                        key={folder.id}
+                                        onContextMenu={(e) => handleFolderContextMenu(e, folderIdStr)}
+                                        className="relative group"
                                     >
-                                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                                            <FolderIcon size={16} className="flex-shrink-0" />
-                                            <span className="truncate">{folder.name}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant="default">{getNotesCount(folder._id)}</Badge>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleFolderContextMenu(e, folder._id);
-                                                }}
-                                                className="opacity-0 group-hover:opacity-100 hover:bg-white/10 rounded p-1 transition-smooth"
-                                            >
-                                                <MoreVertical size={14} />
-                                            </button>
-                                        </div>
-                                    </Link>
-                                </div>
-                            ))}
-                            {folders.length === 0 && (
+                                        <Link
+                                            href={`/dashboard?folderId=${folderIdStr}`}
+                                            onClick={() => setIsMobileOpen(false)}
+                                            className={cn(
+                                                "flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-smooth",
+                                                isSelected
+                                                    ? "glass-card text-white"
+                                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                <FolderIcon
+                                                    size={16}
+                                                    className={cn(
+                                                        "flex-shrink-0 transition-smooth",
+                                                        isSelected && "text-primary"
+                                                    )}
+                                                />
+                                                <span className="truncate">{folder.name}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                <Badge variant="default" className="text-xs">
+                                                    {getNotesCount(folderIdStr)}
+                                                </Badge>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleFolderContextMenu(e, folderIdStr);
+                                                    }}
+                                                    className="opacity-0 group-hover:opacity-100 hover:bg-white/10 rounded p-1 transition-smooth"
+                                                    title="Folder options"
+                                                >
+                                                    <MoreVertical size={14} />
+                                                </button>
+                                            </div>
+                                        </Link>
+                                    </div>
+                                );
+                            })}
+                            {folders.length === 0 && !isLoadingFolders && (
                                 <div className="px-3 py-6 text-center text-sm text-muted-foreground">
                                     <FolderIcon className="mx-auto mb-2 opacity-50" size={24} />
                                     <p className="text-xs">No folders yet</p>
@@ -276,68 +480,131 @@ export function AppSidebar() {
                                 </div>
                             )}
                         </div>
-                    </div>
+                    )}
+                </div>
 
-                    {/* Notes Section */}
-                    <div>
-                        <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            {selectedFolderId ? "Notes" : "Select a Folder"}
+                {/* Notes Section */}
+                <div>
+                    <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        {selectedFolderId ? "Notes" : "All Notes"}
+                    </div>
+                    {isLoadingNotes ? (
+                        <div className="px-3 py-6 flex items-center justify-center">
+                            <Loader2 size={20} className="animate-spin text-primary" />
                         </div>
+                    ) : (
                         <div className="space-y-1">
-                            {!selectedFolderId ? (
+                            {!selectedFolderId && folders.length > 0 ? (
                                 <div className="px-3 py-6 text-center text-sm text-muted-foreground">
                                     <FileText className="mx-auto mb-2 opacity-50" size={24} />
                                     <p className="text-xs">Select a folder to view notes</p>
                                 </div>
                             ) : filteredNotes.length === 0 ? (
                                 <div className="px-3 py-6 text-center text-sm text-muted-foreground">
-                                    {searchQuery ? "No notes found" : "No notes yet"}
+                                    {debouncedSearch ? (
+                                        <>
+                                            <Search className="mx-auto mb-2 opacity-50" size={24} />
+                                            <p className="text-xs">No notes found</p>
+                                            <p className="text-xs mt-1">Try a different search term</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FileText className="mx-auto mb-2 opacity-50" size={24} />
+                                            <p className="text-xs">No notes yet</p>
+                                            <p className="text-xs mt-1">Click + to create one</p>
+                                        </>
+                                    )}
                                 </div>
                             ) : (
-                                filteredNotes.map(note => (
-                                    <Link
-                                        key={note._id}
-                                        href={`/editor/${note._id}`}
-                                        className="block px-3 py-2 rounded-lg text-sm transition-smooth text-gray-300 hover:text-white hover:bg-white/5"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <FileText size={14} className="flex-shrink-0 text-primary" />
-                                            <span className="truncate">{note.title || "Untitled"}</span>
-                                        </div>
-                                    </Link>
-                                ))
+                                filteredNotes.map(note => {
+                                    const isActive = isEditorPage && pathname === `/editor/${note.id}`;
+                                    return (
+                                        <Link
+                                            key={note.id}
+                                            href={`/editor/${note.id}`}
+                                            onClick={() => setIsMobileOpen(false)}
+                                            className={cn(
+                                                "block px-3 py-2 rounded-lg text-sm transition-smooth",
+                                                isActive
+                                                    ? "glass-card text-white"
+                                                    : "text-gray-300 hover:text-white hover:bg-white/5"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <FileText
+                                                    size={14}
+                                                    className={cn(
+                                                        "flex-shrink-0",
+                                                        isActive ? "text-primary" : "text-primary/70"
+                                                    )}
+                                                />
+                                                <span className="truncate">{note.title || "Untitled"}</span>
+                                            </div>
+                                        </Link>
+                                    );
+                                })
                             )}
                         </div>
-                    </div>
-                </div>
-
-                {/* User Profile Footer */}
-                <div className="p-3 border-t border-white/10">
-                    <div className="flex items-center justify-between glass px-3 py-2 rounded-lg">
-                        <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                                {session?.user?.email?.[0]?.toUpperCase() || "U"}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium text-white truncate">
-                                    {session?.user?.email?.split('@')[0] || "User"}
-                                </p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                    {session?.user?.email}
-                                </p>
-                            </div>
-                        </div>
-                        <Button
-                            onClick={() => signOut({ callbackUrl: "/login" })}
-                            variant="ghost"
-                            size="sm"
-                            className="flex-shrink-0 w-8 h-8 p-0"
-                        >
-                            <LogOut size={14} />
-                        </Button>
-                    </div>
+                    )}
                 </div>
             </div>
+
+            {/* User Profile Footer */}
+            <div className="p-3 border-t border-white/10">
+                <div className="flex items-center justify-between glass px-3 py-2 rounded-lg">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                            {session?.user?.email?.[0]?.toUpperCase() || "U"}
+                        </div>
+                        <div className="min-w-0 flex-1 hidden sm:block">
+                            <p className="text-sm font-medium text-white truncate">
+                                {session?.user?.email?.split('@')[0] || "User"}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                                {session?.user?.email}
+                            </p>
+                        </div>
+                    </div>
+                    <Button
+                        onClick={() => signOut({ callbackUrl: "/" })}
+                        variant="ghost"
+                        size="sm"
+                        className="flex-shrink-0 w-8 h-8 p-0"
+                        title="Sign out"
+                    >
+                        <LogOut size={14} />
+                    </Button>
+                </div>
+            </div>
+        </>
+    );
+
+    return (
+        <>
+            {/* Mobile Menu Button */}
+            <button
+                onClick={() => setIsMobileOpen(true)}
+                className="lg:hidden fixed top-4 left-4 z-50 glass-card p-2 rounded-lg shadow-lg"
+                aria-label="Open menu"
+            >
+                <Menu size={20} />
+            </button>
+
+            {/* Sidebar */}
+            <div className={cn(
+                "fixed lg:static inset-y-0 left-0 z-40 w-72 border-r border-white/10 glass-card h-screen flex flex-col animate-slide-in-up transition-transform duration-300",
+                isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+            )}>
+                {sidebarContent}
+            </div>
+
+            {/* Mobile Overlay */}
+            {isMobileOpen && (
+                <div
+                    className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
+                    onClick={() => setIsMobileOpen(false)}
+                />
+            )}
 
             {/* Context Menu */}
             {contextMenu && (

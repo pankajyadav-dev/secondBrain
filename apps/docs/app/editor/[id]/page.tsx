@@ -47,25 +47,16 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
         title: note.title,
         content: note.content,
         folderId: note.folderId.toString(),
+        createdAt: note.createdAt.toISOString(),
+        updatedAt: note.updatedAt.toISOString(),
     };
 
     return (
         <div className="flex h-screen overflow-hidden">
             <AppSidebar />
-
             <main className="flex-1 flex flex-col min-w-0 bg-background border-r border-white/10">
                 <EditorClientWrapper note={noteData} />
             </main>
-
-            {/* AI Sidebar is passed the content. 
-          Ideally, Client Wrapper should pass current content to AI Sidebar, 
-          but they are siblings here. 
-          We can wrap them in a context or pass state up.
-          For strict 'siblings' layout without prop drilling from a parent client component that holds state, 
-          it is hard to sync "current typed text" to "AI Sidebar" precisely in real-time unless they share a parent.
-          
-          I will create a client component `EditorLayout` that holds the state `content` and renders both `Editor` and `AIChat`.
-      */}
         </div>
     );
 }

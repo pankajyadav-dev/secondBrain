@@ -50,10 +50,15 @@ export const authOptions: NextAuthOptions = {
                 session.user.id = token.id as string;
             }
             return session;
-        }
+        },
+        // async signOut() {
+        //     // Clean up any necessary data on sign out
+        //     return true;
+        // }
     },
     pages: {
         signIn: "/login",
+        signOut: "/",
     },
     secret: process.env.NEXTAUTH_SECRET,
 };
