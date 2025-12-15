@@ -4,6 +4,12 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { common, createLowlight } from 'lowlight';
+import javascript from 'highlight.js/lib/languages/javascript';
+import typescript from 'highlight.js/lib/languages/typescript';
+import cpp from 'highlight.js/lib/languages/cpp'
+import java from 'highlight.js/lib/languages/java'
 import { useEffect, useState } from 'react';
 import {
     Bold,
@@ -12,6 +18,7 @@ import {
     List,
     ListOrdered,
     Code,
+    Braces,
     Heading1,
     Heading2,
     Heading3,
@@ -20,9 +27,15 @@ import {
     Undo2,
     Redo2
 } from 'lucide-react';
-import { Tooltip } from '@repo/ui/Tooltip';
+
 import { cn } from '../../../packages/ui/utils/cn';
 
+const lowlight = createLowlight(common);
+
+lowlight.register('javascript', javascript);
+lowlight.register('typescript', typescript);
+lowlight.register('cpp', cpp);
+lowlight.register('java', java);
 
 interface EditorProps {
     content: string;
@@ -34,7 +47,6 @@ export function TipTapEditor({ content, onChange, editable = true }: EditorProps
     const [isMounted, setIsMounted] = useState(false);
     const [lastContent, setLastContent] = useState(content);
 
-    // Prevent hydration mismatch by only rendering on client
     useEffect(() => {
         setIsMounted(true);
     }, []);
@@ -43,173 +55,164 @@ export function TipTapEditor({ content, onChange, editable = true }: EditorProps
         immediatelyRender: false,
         extensions: [
             StarterKit.configure({
-                heading: {
-                    levels: [1, 2, 3],
-                },
+                heading: { levels: [1, 2, 3] },
+                codeBlock: false,
             }),
+
+            CodeBlockLowlight.configure({
+                lowlight,
+            }),
+
             Placeholder.configure({
                 placeholder: 'Start writing your thoughts...',
                 emptyEditorClass: 'is-editor-empty',
             }),
+
             Underline,
         ],
-        content: content,
-        editable: editable,
+
+        content,
+        editable,
+
         onUpdate: ({ editor }) => {
-            const html = editor.getHTML();
-            onChange(html);
+            onChange(editor.getHTML());
         },
+
         editorProps: {
             attributes: {
-                class: 'prose prose-invert max-w-none focus:outline-none min-h-[calc(100vh-12rem)] p-6',
+                class:
+                    'prose prose-invert max-w-none focus:outline-none min-h-[calc(100vh-12rem)] p-6',
             },
         },
     }, []);
 
     useEffect(() => {
-        if (editor && content !== lastContent) {
-            if (editor.getHTML() !== content) {
-                editor.commands.setContent(content);
-                setLastContent(content);
-            }
+        if (editor && content !== lastContent && editor.getHTML() !== content) {
+            editor.commands.setContent(content);
+            setLastContent(content);
         }
     }, [content, editor, lastContent]);
 
-    // Don't render during SSR
     if (!isMounted || !editor) return null;
 
     return (
         <div className="flex flex-col h-full">
-            {/* Enhanced Toolbar */}
+            {/* Toolbar */}
             <div className="flex items-center gap-1 border-b border-white/10 p-3 glass-card sticky top-0 z-10 backdrop-blur-lg">
-                {/* Text Formatting */}
+
+                {/* Text */}
                 <div className="flex items-center gap-1">
-                    <Tooltip content="Bold (Ctrl+B)">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleBold().run()}
-                            active={editor.isActive('bold')}
-                            icon={<Bold size={16} />}
-                        />
-                    </Tooltip>
-                    <Tooltip content="Italic (Ctrl+I)">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleItalic().run()}
-                            active={editor.isActive('italic')}
-                            icon={<Italic size={16} />}
-                        />
-                    </Tooltip>
-                    <Tooltip content="Underline (Ctrl+U)">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleUnderline().run()}
-                            active={editor.isActive('underline')}
-                            icon={<UnderlineIcon size={16} />}
-                        />
-                    </Tooltip>
-                    <Tooltip content="Inline Code">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleCode().run()}
-                            active={editor.isActive('code')}
-                            icon={<Code size={16} />}
-                        />
-                    </Tooltip>
+                    <ToolbarButton
+                        onClick={() => editor.chain().focus().toggleBold().run()}
+                        active={editor.isActive('bold')}
+                        icon={<Bold size={22} />}
+                    />
+
+                    <ToolbarButton
+                        onClick={() => editor.chain().focus().toggleItalic().run()}
+                        active={editor.isActive('italic')}
+                        icon={<Italic size={22} />}
+                    />
+
+                    <ToolbarButton
+                        onClick={() => editor.chain().focus().toggleUnderline().run()}
+                        active={editor.isActive('underline')}
+                        icon={<UnderlineIcon size={22} />}
+                    />
+
+                    {/* Inline code */}
+                    <ToolbarButton
+                        onClick={() => editor.chain().focus().toggleCode().run()}
+                        active={editor.isActive('code')}
+                        icon={<Code size={22} />}
+                    />
+
+                    {/* 🔥 Code Block */}
+                    <ToolbarButton
+                        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                        active={editor.isActive('codeBlock')}
+                        icon={<Braces size={22} />}
+                    />
                 </div>
 
-                <div className="w-px h-6 bg-white/20 mx-1" />
+                <Divider />
 
                 {/* Headings */}
-                <div className="flex items-center gap-1">
-                    <Tooltip content="Heading 1">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                            active={editor.isActive('heading', { level: 1 })}
-                            icon={<Heading1 size={16} />}
-                        />
-                    </Tooltip>
-                    <Tooltip content="Heading 2">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                            active={editor.isActive('heading', { level: 2 })}
-                            icon={<Heading2 size={16} />}
-                        />
-                    </Tooltip>
-                    <Tooltip content="Heading 3">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                            active={editor.isActive('heading', { level: 3 })}
-                            icon={<Heading3 size={16} />}
-                        />
-                    </Tooltip>
-                </div>
+                <ToolbarButton
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                    active={editor.isActive('heading', { level: 1 })}
+                    icon={<Heading1 size={22} />}
+                />
 
-                <div className="w-px h-6 bg-white/20 mx-1" />
+                <ToolbarButton
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                    active={editor.isActive('heading', { level: 2 })}
+                    icon={<Heading2 size={22} />}
+                />
 
-                {/* Lists & More */}
-                <div className="flex items-center gap-1">
-                    <Tooltip content="Bullet List">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleBulletList().run()}
-                            active={editor.isActive('bulletList')}
-                            icon={<List size={16} />}
-                        />
-                    </Tooltip>
-                    <Tooltip content="Numbered List">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                            active={editor.isActive('orderedList')}
-                            icon={<ListOrdered size={16} />}
-                        />
-                    </Tooltip>
-                    <Tooltip content="Blockquote">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                            active={editor.isActive('blockquote')}
-                            icon={<Quote size={16} />}
-                        />
-                    </Tooltip>
-                </div>
+                <ToolbarButton
+                    onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                    active={editor.isActive('heading', { level: 3 })}
+                    icon={<Heading3 size={22} />}
+                />
 
-                <div className="w-px h-6 bg-white/20 mx-1" />
+                <Divider />
 
-                {/* Divider & History */}
-                <div className="flex items-center gap-1">
-                    <Tooltip content="Horizontal Rule">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().setHorizontalRule().run()}
-                            active={false}
-                            icon={<Minus size={16} />}
-                        />
-                    </Tooltip>
-                </div>
+                {/* Lists */}
+                <ToolbarButton
+                    onClick={() => editor.chain().focus().toggleBulletList().run()}
+                    active={editor.isActive('bulletList')}
+                    icon={<List size={22} />}
+                />
+
+                <ToolbarButton
+                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                    active={editor.isActive('orderedList')}
+                    icon={<ListOrdered size={22} />}
+                />
+
+                <ToolbarButton
+                    onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                    active={editor.isActive('blockquote')}
+                    icon={<Quote size={22} />}
+                />
+
+                <Divider />
+
+                <ToolbarButton
+                    onClick={() => editor.chain().focus().setHorizontalRule().run()}
+                    active={false}
+                    icon={<Minus size={22} />}
+                />
 
                 <div className="flex-1" />
 
-                {/* Undo/Redo */}
-                <div className="flex items-center gap-1">
-                    <Tooltip content="Undo (Ctrl+Z)">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().undo().run()}
-                            active={false}
-                            disabled={!editor.can().undo()}
-                            icon={<Undo2 size={16} />}
-                        />
-                    </Tooltip>
-                    <Tooltip content="Redo (Ctrl+Shift+Z)">
-                        <ToolbarButton
-                            onClick={() => editor.chain().focus().redo().run()}
-                            active={false}
-                            disabled={!editor.can().redo()}
-                            icon={<Redo2 size={16} />}
-                        />
-                    </Tooltip>
-                </div>
+                {/* History */}
+                <ToolbarButton
+                    onClick={() => editor.chain().focus().undo().run()}
+                    active={false}
+                    disabled={!editor.can().undo()}
+                    icon={<Undo2 size={22} />}
+                />
+
+                <ToolbarButton
+                    onClick={() => editor.chain().focus().redo().run()}
+                    active={false}
+                    disabled={!editor.can().redo()}
+                    icon={<Redo2 size={22} />}
+                />
             </div>
 
-            {/* Editor Content */}
+            {/* Editor */}
             <div className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-300 via-gray-300 to-gray-300">
                 <EditorContent editor={editor} />
             </div>
         </div>
     );
+}
+
+function Divider() {
+    return <div className="w-px h-6 bg-white/20 mx-1" />;
 }
 
 interface ToolbarButtonProps {

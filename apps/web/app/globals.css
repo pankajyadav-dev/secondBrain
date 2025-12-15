@@ -1,5 +1,13 @@
 @import "tailwindcss";
 @import '@repo/tailwind-config';
+@import 'highlight.js/styles/github-dark.css';
+
+/* Optional tweaks */
+pre code {
+  display: block;
+  overflow-x: auto;
+}
+
 
 @theme {
   /* Base Colors - Cursor Midnight Theme */
