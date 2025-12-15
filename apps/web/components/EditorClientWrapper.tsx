@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { FolderOpen, Calendar, Clock, Type, Check, Loader2, AlertCircle, Save } from "lucide-react";
+import { FolderOpen, Calendar, Clock, Type, Check, Loader2, AlertCircle, Save, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { TipTapEditor } from "./TipTapEditor";
 import { AIChatSidebar } from "./AIChatSidebar";
+import { Button } from "@repo/ui/Button";
 import { cn } from "../../../packages/ui/utils/cn";
 import { useDebounce } from "../hooks/useDebounce";
 
@@ -163,7 +164,7 @@ export function EditorClientWrapper({ note }: { note: NoteData }) {
     }, [hasUnsavedChanges]);
 
     return (
-        <>
+        <div className="flex h-screen overflow-hidden">
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Enhanced Header */}
                 <div className="border-b border-white/10 glass px-4 sm:px-6 py-3 sm:py-4 space-y-3">
@@ -242,6 +243,21 @@ export function EditorClientWrapper({ note }: { note: NoteData }) {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                            {/* AI Toggle Button */}
+                            <Button
+                                variant={isAIOpen ? "primary" : "ghost"}
+                                size="sm"
+                                onClick={() => setIsAIOpen(!isAIOpen)}
+                                className={cn(
+                                    "flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg transition-smooth",
+                                    isAIOpen && "glass-card"
+                                )}
+                                title={isAIOpen ? "Close AI Assistant" : "Open AI Assistant"}
+                            >
+                                <Sparkles size={12} />
+                                <span className="hidden sm:inline">AI</span>
+                            </Button>
+
                             {/* Word/Character Count */}
                             <div className="flex items-center gap-1.5 text-muted-foreground">
                                 <Type size={12} />
@@ -295,7 +311,9 @@ export function EditorClientWrapper({ note }: { note: NoteData }) {
             </div>
 
             {/* AI Chat Sidebar */}
-            <AIChatSidebar contextContent={content} isOpen={isAIOpen} onToggle={() => setIsAIOpen(!isAIOpen)} />
-        </>
+            {isAIOpen && (
+                <AIChatSidebar contextContent={content} isOpen={isAIOpen} onToggle={() => setIsAIOpen(!isAIOpen)} />
+            )}
+        </div>
     );
 }

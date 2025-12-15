@@ -111,7 +111,7 @@ export function AIChatSidebar({ contextContent, isOpen = true, onToggle }: AICha
         <div className={cn(
             "border-l border-white/10 glass-card flex flex-col h-screen animate-slide-in-up",
             "w-full lg:w-96",
-            !isOpen && "hidden lg:flex"
+            !isOpen && "hidden"
         )}>
             {/* Header */}
             <div className="p-3 sm:p-4 border-b border-white/10 flex items-center justify-between">
@@ -140,7 +140,7 @@ export function AIChatSidebar({ contextContent, isOpen = true, onToggle }: AICha
                             variant="ghost"
                             size="sm"
                             onClick={onToggle}
-                            className="lg:hidden h-7 sm:h-8 w-7 sm:w-8 p-0"
+                            className="h-7 sm:h-8 w-7 sm:w-8 p-0"
                         >
                             <X size={14} />
                         </Button>
