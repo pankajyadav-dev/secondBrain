@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
         let folderIdInt: number;
 
         if (folderId) {
+            //convert the folderid from string to int for postgres query 
             folderIdInt = parseInt(folderId);
             if (isNaN(folderIdInt)) {
                 return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
