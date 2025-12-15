@@ -323,35 +323,12 @@ export function AppSidebar() {
             {/* Header */}
             <div className="p-3 sm:p-4 border-b border-white/10 flex justify-between items-center">
                 <div className="min-w-0 flex-1">
-                    <h1 className="font-bold text-lg sm:text-xl bg-gradient-primary bg-clip-text text-transparent truncate">
+                    <h1 className="font-bold text-lg sm:text-xl  bg-clip-text text-gray-200 truncate">
                         Second Brain
                     </h1>
                     <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">Organize your thoughts</p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                    <Button
-                        onClick={createNote}
-                        size="sm"
-                        variant="primary"
-                        disabled={isCreatingNote}
-                        className="rounded-full w-8 h-8 sm:w-9 sm:h-9 p-0"
-                        title="Create new note"
-                    >
-                        {isCreatingNote ? (
-                            <Loader2 size={16} className="animate-spin" />
-                        ) : (
-                            <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
-                        )}
-                    </Button>
-                    <Button
-                        onClick={() => setIsMobileOpen(false)}
-                        variant="ghost"
-                        size="sm"
-                        className="lg:hidden rounded-full w-8 h-8 p-0"
-                    >
-                        <X size={16} />
-                    </Button>
-                </div>
+
             </div>
 
             {/* Error Message */}
@@ -488,6 +465,31 @@ export function AppSidebar() {
                     <div className="px-2 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         {selectedFolderId ? "Notes" : "All Notes"}
                     </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <span>Create New Note</span>
+                        <Button
+                            onClick={createNote}
+                            size="sm"
+                            variant="primary"
+                            disabled={isCreatingNote}
+                            className="rounded-full w-8 h-8 sm:w-9 sm:h-9 p-0"
+                            title="Create new note"
+                        >
+                            {isCreatingNote ? (
+                                <Loader2 size={16} className="animate-spin" />
+                            ) : (
+                                <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
+                            )}
+                        </Button>
+                        <Button
+                            onClick={() => setIsMobileOpen(false)}
+                            variant="ghost"
+                            size="sm"
+                            className="lg:hidden rounded-full w-8 h-8 p-0"
+                        >
+                            <X size={16} />
+                        </Button>
+                    </div>
                     {isLoadingNotes ? (
                         <div className="px-3 py-6 flex items-center justify-center">
                             <Loader2 size={20} className="animate-spin text-primary" />
@@ -551,16 +553,16 @@ export function AppSidebar() {
 
             {/* User Profile Footer */}
             <div className="p-3 border-t border-white/10">
-                <div className="flex items-center justify-between glass px-3 py-2 rounded-lg">
+                <div className="flex items-center justify-between glass px-3 py-2 rounded-sm">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                         <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                             {session?.user?.email?.[0]?.toUpperCase() || "U"}
                         </div>
                         <div className="min-w-0 flex-1 hidden sm:block">
-                            <p className="text-sm font-medium text-white truncate">
+                            <p className=" font-bold text-gray-100 truncate">
                                 {session?.user?.email?.split('@')[0] || "User"}
                             </p>
-                            <p className="text-xs text-muted-foreground truncate">
+                            <p className="text-xs text-gray-200 truncate">
                                 {session?.user?.email}
                             </p>
                         </div>

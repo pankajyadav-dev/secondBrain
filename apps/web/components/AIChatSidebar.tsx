@@ -116,7 +116,7 @@ export function AIChatSidebar({ contextContent, isOpen = true, onToggle }: AICha
             {/* Header */}
             <div className="p-3 sm:p-4 border-b border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-primary flex items-center justify-center">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-700 flex items-center justify-center">
                         <Sparkles size={14} className="sm:w-4 sm:h-4 text-white" />
                     </div>
                     <div>
@@ -151,9 +151,9 @@ export function AIChatSidebar({ contextContent, isOpen = true, onToggle }: AICha
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4" ref={scrollRef}>
                 {messages.length === 0 && (
-                    <div className="text-center text-muted-foreground text-sm mt-8 sm:mt-16 space-y-3 sm:space-y-4 animate-fade-in">
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-primary/20 flex items-center justify-center mx-auto">
-                            <MessageSquare size={24} className="sm:w-8 sm:h-8 text-primary" />
+                    <div className="text-center text-gray-300 text-sm mt-8 sm:mt-16 space-y-3 sm:space-y-4 animate-fade-in">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gray-700 flex items-center justify-center mx-auto">
+                            <MessageSquare size={24} className="sm:w-8 sm:h-8 text-gray-200" />
                         </div>
                         <div>
                             <p className="font-medium">Start a conversation</p>
@@ -179,7 +179,7 @@ export function AIChatSidebar({ contextContent, isOpen = true, onToggle }: AICha
                         )}
                     >
                         {msg.role === "assistant" && (
-                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0">
+                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
                                 <Bot size={12} className="sm:w-[14px] sm:h-[14px] text-white" />
                             </div>
                         )}
@@ -196,7 +196,7 @@ export function AIChatSidebar({ contextContent, isOpen = true, onToggle }: AICha
                             )}>
                                 {msg.content}
                             </div>
-                            <span className="text-xs text-muted-foreground px-1">
+                            <span className="text-xs text-gray-200 px-1">
                                 {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                         </div>
@@ -230,16 +230,16 @@ export function AIChatSidebar({ contextContent, isOpen = true, onToggle }: AICha
                         className={cn(
                             "flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg transition-smooth border text-xs",
                             useSelection
-                                ? "glass-card text-primary border-primary/30"
+                                ? "glass-card text-gray-200 border-primary/30"
                                 : "glass border-transparent text-muted-foreground hover:text-white"
                         )}
                     >
                         <FileText size={12} />
-                        <span className="hidden sm:inline">{useSelection ? "Using Selected Text" : "Using Full Note"}</span>
-                        <span className="sm:hidden">{useSelection ? "Selection" : "Full Note"}</span>
+                        <span className="hidden sm:inline text-gray-300">{useSelection ? "Using Selected Text" : "Using Full Note"}</span>
+                        <span className="sm:hidden text-gray-300">{useSelection ? "Selection" : "Full Note"}</span>
                     </button>
 
-                    <span className="text-muted-foreground text-xs">
+                    <span className="text-gray-200 text-xs">
                         {contextSize} chars
                     </span>
                 </div>
@@ -247,7 +247,7 @@ export function AIChatSidebar({ contextContent, isOpen = true, onToggle }: AICha
                 {/* Input */}
                 <div className="relative">
                     <Textarea
-                        className="pr-12 resize-none text-sm"
+                        className="pr-12 resize-none text-sm text-gray-400"
                         placeholder="Ask AI about your note..."
                         rows={3}
                         value={input}

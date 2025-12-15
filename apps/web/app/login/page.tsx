@@ -41,20 +41,20 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4 sm:px-6 relative overflow-hidden">
+        <div className="flex min-h-screen text-foreground  items-center justify-center bg-gradient-to-br from-blue-900 via-blue-400 to-purple-200 px-4 sm:px-6 relative overflow-hidden">
             {/* Decorative background */}
-            <div className="absolute inset-0 bg-gradient-radial opacity-30" />
+            <div className="absolute inset-0 bg-gradient-white opacity-30" />
             <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-primary/10 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-64 sm:w-96 h-64 sm:h-96 bg-accent/10 rounded-full blur-3xl" />
 
             <div className="w-full max-w-md relative z-10 animate-scale-in">
                 <div className="glass-card p-6 sm:p-8 rounded-2xl space-y-6 sm:space-y-8">
                     {/* Logo & Title */}
-                    <div className="text-center space-y-3">
-                        <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-primary mb-2">
+                    <div className="text-center text-foreground space-y-3">
+                        <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-green-300 mb-2">
                             <Sparkles size={28} className="sm:w-8 sm:h-8 text-white" />
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
                             Welcome Back
                         </h2>
                         <p className="text-xs sm:text-sm text-muted-foreground">
@@ -76,7 +76,7 @@ export default function LoginPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     disabled={loading}
-                                    className="w-full"
+                                    className="w-full text-gray-300"
                                 />
                             </div>
 
@@ -91,7 +91,7 @@ export default function LoginPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     disabled={loading}
-                                    className="w-full"
+                                    className="w-full text-gray-300"
                                 />
                             </div>
                         </div>
@@ -106,7 +106,7 @@ export default function LoginPage() {
                             type="submit"
                             disabled={loading}
                             variant="primary"
-                            className="w-full"
+                            className="w-full font-bold border-2 py-2 mx-auto hover:bg-blue-600 hover:text-white hover:border-blue-900"
                         >
                             {loading ? (
                                 <>
@@ -125,7 +125,7 @@ export default function LoginPage() {
                             Don't have an account?{" "}
                             <Link
                                 href="/signup"
-                                className="font-medium text-primary hover:text-primary/80 transition-smooth"
+                                className="font-bold text-primary hover:text-white transition-smooth"
                             >
                                 Sign up
                             </Link>

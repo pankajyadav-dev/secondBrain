@@ -52,7 +52,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
     };
 
     return (
-        <div className="flex h-screen overflow-hidden">
+        <div className="flex h-screen overflow-hidden bg-gray-500">
             <AppSidebar />
             <main className="flex-1 flex flex-col min-w-0 bg-background border-r border-white/10">
                 <EditorClientWrapper note={noteData} />

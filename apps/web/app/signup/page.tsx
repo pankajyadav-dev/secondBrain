@@ -41,7 +41,7 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4 sm:px-6 relative overflow-hidden">
+        <div className="flex min-h-screen text-foreground  items-center justify-center bg-gradient-to-br from-blue-900 via-blue-400 to-purple-200 px-4 sm:px-6 relative overflow-hidden">
             {/* Decorative background */}
             <div className="absolute inset-0 bg-gradient-radial opacity-30" />
             <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-primary/10 rounded-full blur-3xl" />
@@ -53,10 +53,10 @@ export default function SignupPage() {
                         <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-primary mb-2">
                             <Sparkles size={28} className="sm:w-8 sm:h-8 text-white" />
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
                             Create account
                         </h2>
-                        <p className="text-xs sm:text-sm text-gray-400">
+                        <p className="text-xs sm:text-sm text-gray-300">
                             Start building your Second Brain
                         </p>
                     </div>
@@ -73,7 +73,7 @@ export default function SignupPage() {
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     disabled={loading}
-                                    className="w-full"
+                                    className="w-full text-gray-300"
                                 />
                             </div>
                             <div>
@@ -87,7 +87,7 @@ export default function SignupPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     disabled={loading}
-                                    className="w-full"
+                                    className="w-full text-gray-300"
                                 />
                             </div>
                             <div>
@@ -101,7 +101,7 @@ export default function SignupPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     disabled={loading}
-                                    className="w-full"
+                                    className="w-full text-gray-300"
                                 />
                             </div>
                         </div>
@@ -116,7 +116,7 @@ export default function SignupPage() {
                             type="submit"
                             disabled={loading}
                             variant="primary"
-                            className="w-full"
+                            className="w-full font-bold border-2 py-2 mx-auto hover:bg-blue-600 hover:text-white hover:border-blue-900"
                         >
                             {loading ? (
                                 <>
@@ -133,7 +133,7 @@ export default function SignupPage() {
                             Already have an account?{" "}
                             <Link
                                 href="/login"
-                                className="font-medium text-primary hover:text-primary/80 transition-smooth"
+                                className="font-bold text-primary hover:text-white transition-smooth"
                             >
                                 Sign in
                             </Link>
