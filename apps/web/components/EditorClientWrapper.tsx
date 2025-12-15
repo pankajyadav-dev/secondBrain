@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { FolderOpen, Calendar, Clock, Type, Check, Loader2, AlertCircle, Save } from "lucide-react";
+import { FolderOpen, Calendar, Clock, Type, Check, Loader2, AlertCircle, Save, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { TipTapEditor } from "./TipTapEditor";
 import { AIChatSidebar } from "./AIChatSidebar";
 import { cn } from "../../../packages/ui/utils/cn";
 import { useDebounce } from "../hooks/useDebounce";
+import { Button } from "@repo/ui/Button";
 
 interface NoteData {
     _id: string;
@@ -170,7 +171,7 @@ export function EditorClientWrapper({ note }: { note: NoteData }) {
                     {/* Title */}
                     <div className="flex items-center gap-2">
                         <input
-                            className="bg-transparent text-xl sm:text-2xl font-bold outline-none text-white w-full placeholder:text-muted-foreground"
+                            className="bg-transparent text-xl sm:text-2xl font-bold outline-none text-gray-300 w-full placeholder:text-muted-foreground"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Untitled Note"
@@ -200,25 +201,16 @@ export function EditorClientWrapper({ note }: { note: NoteData }) {
 
                     {/* Metadata Row */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-muted-foreground">
-                            {/* Folder Selector */}
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 font-bold text-muted-foreground">
+                            Folder
                             <div className="flex items-center gap-2 glass-card px-2 sm:px-3 py-1.5 rounded-lg">
                                 <FolderOpen size={14} className="text-primary flex-shrink-0" />
                                 {isLoadingFolders ? (
                                     <Loader2 size={12} className="animate-spin text-primary" />
                                 ) : (
-                                    <select
-                                        className="bg-transparent outline-none cursor-pointer text-sm min-w-[120px]"
-                                        value={folderId}
-                                        onChange={(e) => setFolderId(e.target.value)}
-                                    >
-                                        <option value="" className="bg-secondary">Unfiled</option>
-                                        {availableFolders.map(f => (
-                                            <option key={f.id} value={f.id.toString()} className="bg-secondary">
-                                                {f.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <>
+                                        <span>{availableFolders.find(f => f.id == parseInt(folderId))?.name}</span>
+                                    </>
                                 )}
                             </div>
 
@@ -242,6 +234,20 @@ export function EditorClientWrapper({ note }: { note: NoteData }) {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                            {/* AI Toggle Button */}
+                            <Button
+                                variant={isAIOpen ? "primary" : "ghost"}
+                                size="sm"
+                                onClick={() => setIsAIOpen(!isAIOpen)}
+                                className={cn(
+                                    "flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg transition-smooth", "glass-card"
+                                )}
+                                title={isAIOpen ? "Close AI Assistant" : "Open AI Assistant"}
+                            >
+                                <Sparkles size={12} />
+                                <span className="hidden sm:inline font-bold text-muted-foreground">AI</span>
+                            </Button>
+
                             {/* Word/Character Count */}
                             <div className="flex items-center gap-1.5 text-muted-foreground">
                                 <Type size={12} />

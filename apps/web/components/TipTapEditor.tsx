@@ -205,7 +205,7 @@ export function TipTapEditor({ content, onChange, editable = true }: EditorProps
             </div>
 
             {/* Editor Content */}
-            <div className="flex-1 overflow-y-auto bg-gradient-to-br from-background via-background to-background/95">
+            <div className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-300 via-gray-300 to-gray-300">
                 <EditorContent editor={editor} />
             </div>
         </div>

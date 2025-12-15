@@ -12,7 +12,7 @@ export default async function Dashboard() {
     }
 
     return (
-        <div className="flex h-screen overflow-hidden">
+        <div className="flex h-screen overflow-hidden bg-gray-500">
             <AppSidebar />
             <main className="flex-1 flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
                 {/* Decorative background */}
@@ -30,7 +30,7 @@ export default async function Dashboard() {
                     {/* Heading */}
                     <div className="space-y-3">
                         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
-                            <span className="bg-gradient-primary bg-clip-text text-transparent">
+                            <span className=" bg-clip-text text-gray-200">
                                 Welcome to Your Second Brain
                             </span>
                         </h1>
@@ -55,9 +55,9 @@ export default async function Dashboard() {
                     </div>
 
                     {/* CTA */}
-                    <p className="text-xs sm:text-sm text-muted-foreground pt-4 px-4">
+                    {/* <p className="text-xs sm:text-sm text-muted-foreground pt-4 px-4">
                         ← Create or select a folder to get started
-                    </p>
+                    </p> */}
                 </div>
             </main>
         </div>

@@ -3,7 +3,7 @@ import { ArrowRight, Brain } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background text-foreground relative overflow-hidden px-4 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-blue-900 text-foreground relative overflow-hidden px-4 sm:px-6 lg:px-8">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/20 via-background to-background opacity-50 z-0" />
 
       <main className="relative z-10 text-center px-4 max-w-4xl mx-auto w-full">
@@ -38,9 +38,6 @@ export default function Home() {
         </div>
       </main>
 
-      <footer className="absolute bottom-4 sm:bottom-6 text-xs sm:text-sm text-gray-600 text-center w-full px-4">
-        Built with Next.js, PostgreSQL & Gemini
-      </footer>
     </div>
   );
 }
