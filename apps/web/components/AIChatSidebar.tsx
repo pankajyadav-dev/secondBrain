@@ -63,19 +63,33 @@ export function AIChatSidebar({ contextContent, isOpen = true, onToggle }: AICha
                 }),
             });
 
-            if (!res.ok) throw new Error("Failed to fetch response");
-
             const data = await res.json();
+
+            if (!res.ok) {
+                // Handle specific error types
+                let errorMessage = "Error communicating with AI. Please try again.";
+
+                if (res.status === 429) {
+                    errorMessage = data.error || "Rate limit exceeded. Please wait a moment and try again.";
+                } else if (data.code === "QUOTA_NOT_CONFIGURED") {
+                    errorMessage = "API quota not configured. Please contact support.";
+                } else if (data.error) {
+                    errorMessage = data.error;
+                }
+
+                throw new Error(errorMessage);
+            }
+
             const aiMsg: Message = {
                 role: "assistant",
                 content: data.reply,
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, aiMsg]);
-        } catch (err) {
+        } catch (err: any) {
             const errorMsg: Message = {
                 role: "assistant",
-                content: "Error communicating with AI. Please try again.",
+                content: err.message || "Error communicating with AI. Please try again.",
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, errorMsg]);
