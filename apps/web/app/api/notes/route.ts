@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
         let folderIdInt: number;
 
         if (folderId) {
-            folderIdInt = parseInt(folderId);
+            // fix the folder name issue
+            folderIdInt = typeof folderId === "string" ? parseInt(folderId, 10) : folderId;
             if (isNaN(folderIdInt)) {
                 return NextResponse.json({ error: "Invalid folder ID" }, { status: 400 });
             }
@@ -54,11 +55,31 @@ export async function POST(req: NextRequest) {
             folderIdInt = defaultFolder.id;
         }
 
+        const baseTitle = (title && title.trim()) || "Untitled";
+        let uniqueTitle = baseTitle;
+        let suffix = 1;
+
+        // fix the folder name issue
+        while (true) {
+            const existing = await prisma.notes.findFirst({
+                where: {
+                    authorId,
+                    folderId: folderIdInt,
+                    title: uniqueTitle,
+                },
+                select: { id: true },
+            });
+
+            if (!existing) break;
+            uniqueTitle = `${baseTitle} (${suffix})`;
+            suffix += 1;
+        }
+
         const note = await prisma.notes.create({
             data: {
                 authorId,
                 folderId: folderIdInt,
-                title: title || "Untitled",
+                title: uniqueTitle,
                 content: content || "",
             },
         });
@@ -66,6 +87,10 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(note, { status: 201 });
     } catch (error) {
         console.error("Create note error:", error);
+        // Handle unique constraint collisions gracefully
+        if ((error as any)?.code === "P2002") {
+            return NextResponse.json({ error: "Note title must be unique within the folder." }, { status: 409 });
+        }
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

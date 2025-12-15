@@ -47,7 +47,8 @@ interface ApiError {
 
 export function AppSidebar() {
     const [folders, setFolders] = useState<Folder[]>([]);
-    const [notes, setNotes] = useState<Note[]>([]);
+    const [allNotes, setAllNotes] = useState<Note[]>([]);
+    const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     const [newFolderName, setNewFolderName] = useState("");
@@ -69,6 +70,7 @@ export function AppSidebar() {
     const searchParams = useSearchParams();
     const pathname = usePathname();
     const selectedFolderId = searchParams.get("folderId");
+    const isEditorPage = pathname?.startsWith("/editor");
     const { data: session } = useSession();
 
     // Debounce search query
@@ -96,18 +98,18 @@ export function AppSidebar() {
     }, []);
 
     // Fetch notes with error handling
-    const fetchNotes = useCallback(async (folderId: string | null) => {
+    const fetchNotes = useCallback(async () => {
         setIsLoadingNotes(true);
         setError(null);
         try {
-            const url = folderId ? `/api/notes?folderId=${folderId}` : "/api/notes";
-            const res = await fetch(url);
+            // Always fetch all notes so counts stay accurate across folders
+            const res = await fetch("/api/notes");
             if (!res.ok) {
                 const errorData: ApiError = await res.json().catch(() => ({ error: "Failed to fetch notes" }));
                 throw new Error(errorData.error || "Failed to fetch notes");
             }
             const data = await res.json();
-            setNotes(data);
+            setAllNotes(data);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to fetch notes";
             setError(errorMessage);
@@ -122,8 +124,29 @@ export function AppSidebar() {
     }, [fetchFolders]);
 
     useEffect(() => {
-        fetchNotes(selectedFolderId);
-    }, [selectedFolderId, fetchNotes]);
+        fetchNotes();
+    }, [fetchNotes]);
+
+    // Sync active folder from query param
+    useEffect(() => {
+        if (selectedFolderId) {
+            setActiveFolderId(selectedFolderId);
+        }
+    }, [selectedFolderId]);
+
+    // When on editor page without folder param, derive folder from current note
+    useEffect(() => {
+        if (!pathname || !isEditorPage || selectedFolderId) return;
+        const parts = pathname.split("/");
+        const noteIdStr = parts[parts.length - 1];
+        if (!noteIdStr) return;
+        const noteId = parseInt(noteIdStr, 10);
+        if (Number.isNaN(noteId)) return;
+        const note = allNotes.find(n => n.id === noteId);
+        if (note) {
+            setActiveFolderId(note.folderId.toString());
+        }
+    }, [pathname, isEditorPage, selectedFolderId, allNotes]);
 
     const createFolder = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -179,7 +202,7 @@ export function AppSidebar() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     title: "Untitled Note",
-                    folderId: selectedFolderId ? parseInt(selectedFolderId) : undefined
+                    folderId: activeFolderId ? parseInt(activeFolderId) : undefined
                 }),
             });
 
@@ -190,7 +213,7 @@ export function AppSidebar() {
 
             const note = await res.json();
             router.push(`/editor/${note.id}`);
-            fetchNotes(selectedFolderId);
+            fetchNotes();
             setIsMobileOpen(false);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to create note";
@@ -302,21 +325,22 @@ export function AppSidebar() {
 
     // Filter notes based on search
     const filteredNotes = useMemo(() => {
-        if (!debouncedSearch) return notes;
+        const baseNotes = activeFolderId
+            ? allNotes.filter(n => n.folderId === parseInt(activeFolderId))
+            : allNotes;
+
+        if (!debouncedSearch) return baseNotes;
         const query = debouncedSearch.toLowerCase();
-        return notes.filter(note =>
-            note.title.toLowerCase().includes(query)
+        return baseNotes.filter(note =>
+            (note.title || "").toLowerCase().includes(query)
         );
-    }, [notes, debouncedSearch]);
+    }, [allNotes, activeFolderId, debouncedSearch]);
 
     // Count notes per folder
     const getNotesCount = useCallback((folderId: string) => {
         const folderIdNum = parseInt(folderId);
-        return notes.filter(n => n.folderId === folderIdNum).length;
-    }, [notes]);
-
-    // Check if current path is editor
-    const isEditorPage = pathname?.startsWith("/editor");
+        return allNotes.filter(n => n.folderId === folderIdNum).length;
+    }, [allNotes]);
 
     const sidebarContent = (
         <>
@@ -490,64 +514,67 @@ export function AppSidebar() {
                             <X size={16} />
                         </Button>
                     </div>
-                    {isLoadingNotes ? (
-                        <div className="px-3 py-6 flex items-center justify-center">
-                            <Loader2 size={20} className="animate-spin text-primary" />
-                        </div>
-                    ) : (
-                        <div className="space-y-1">
-                            {!selectedFolderId && folders.length > 0 ? (
-                                <div className="px-3 py-6 text-center text-sm text-muted-foreground">
-                                    <FileText className="mx-auto mb-2 opacity-50" size={24} />
-                                    <p className="text-xs">Select a folder to view notes</p>
-                                </div>
-                            ) : filteredNotes.length === 0 ? (
-                                <div className="px-3 py-6 text-center text-sm text-muted-foreground">
-                                    {debouncedSearch ? (
-                                        <>
-                                            <Search className="mx-auto mb-2 opacity-50" size={24} />
-                                            <p className="text-xs">No notes found</p>
-                                            <p className="text-xs mt-1">Try a different search term</p>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FileText className="mx-auto mb-2 opacity-50" size={24} />
-                                            <p className="text-xs">No notes yet</p>
-                                            <p className="text-xs mt-1">Click + to create one</p>
-                                        </>
-                                    )}
-                                </div>
-                            ) : (
-                                filteredNotes.map(note => {
-                                    const isActive = isEditorPage && pathname === `/editor/${note.id}`;
-                                    return (
-                                        <Link
-                                            key={note.id}
-                                            href={`/editor/${note.id}`}
-                                            onClick={() => setIsMobileOpen(false)}
-                                            className={cn(
-                                                "block px-3 py-2 rounded-lg text-sm transition-smooth",
-                                                isActive
-                                                    ? "glass-card text-white"
-                                                    : "text-gray-300 hover:text-white hover:bg-white/5"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <FileText
-                                                    size={14}
-                                                    className={cn(
-                                                        "flex-shrink-0",
-                                                        isActive ? "text-primary" : "text-primary/70"
-                                                    )}
-                                                />
-                                                <span className="truncate">{note.title || "Untitled"}</span>
-                                            </div>
-                                        </Link>
-                                    );
-                                })
-                            )}
-                        </div>
-                    )}
+                    <div className="space-y-1 relative">
+                        {isLoadingNotes && filteredNotes.length > 0 && (
+                            <div className="absolute right-3 top-2 text-primary">
+                                <Loader2 size={16} className="animate-spin" />
+                            </div>
+                        )}
+                        {isLoadingNotes && filteredNotes.length === 0 ? (
+                            <div className="px-3 py-6 flex items-center justify-center">
+                                <Loader2 size={20} className="animate-spin text-primary" />
+                            </div>
+                        ) : !selectedFolderId && folders.length > 0 ? (
+                            <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                                <FileText className="mx-auto mb-2 opacity-50" size={24} />
+                                <p className="text-xs">Select a folder to view notes</p>
+                            </div>
+                        ) : filteredNotes.length === 0 ? (
+                            <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                                {debouncedSearch ? (
+                                    <>
+                                        <Search className="mx-auto mb-2 opacity-50" size={24} />
+                                        <p className="text-xs">No notes found</p>
+                                        <p className="text-xs mt-1">Try a different search term</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <FileText className="mx-auto mb-2 opacity-50" size={24} />
+                                        <p className="text-xs">No notes yet</p>
+                                        <p className="text-xs mt-1">Click + to create one</p>
+                                    </>
+                                )}
+                            </div>
+                        ) : (
+                            filteredNotes.map(note => {
+                                const isActive = isEditorPage && pathname === `/editor/${note.id}`;
+                                return (
+                                    <Link
+                                        key={note.id}
+                                        href={`/editor/${note.id}`}
+                                        onClick={() => setIsMobileOpen(false)}
+                                        className={cn(
+                                            "block px-3 py-2 rounded-lg text-sm transition-smooth",
+                                            isActive
+                                                ? "glass-card text-white"
+                                                : "text-gray-300 hover:text-white hover:bg-white/5"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <FileText
+                                                size={14}
+                                                className={cn(
+                                                    "flex-shrink-0",
+                                                    isActive ? "text-primary" : "text-primary/70"
+                                                )}
+                                            />
+                                            <span className="truncate">{note.title || "Untitled"}</span>
+                                        </div>
+                                    </Link>
+                                );
+                            })
+                        )}
+                    </div>
                 </div>
             </div>
 
