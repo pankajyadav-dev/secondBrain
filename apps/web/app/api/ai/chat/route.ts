@@ -5,7 +5,7 @@ import { authOptions } from "../../../../lib/auth";
 
 // --- Configuration ---
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const MODEL_NAME = "gemini-1.5-flash";
+const MODEL_NAME = "gemini-3-pro-preview";
 
 // --- Retry Helper (Kept for robustness) ---
 async function retryWithBackoff<T>(
