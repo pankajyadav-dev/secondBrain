@@ -4,20 +4,6 @@
 <div align="center">
 
 # SECONDBRAIN.GIT
-
-<em></em>
-
-<!-- BADGES -->
-<img src="https://img.shields.io/github/license/pankajyadav-dev/secondBrain.git?style=default&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
-<img src="https://img.shields.io/github/last-commit/pankajyadav-dev/secondBrain.git?style=default&logo=git&logoColor=white&color=0080ff" alt="last-commit">
-<img src="https://img.shields.io/github/languages/top/pankajyadav-dev/secondBrain.git?style=default&color=0080ff" alt="repo-top-language">
-<img src="https://img.shields.io/github/languages/count/pankajyadav-dev/secondBrain.git?style=default&color=0080ff" alt="repo-language-count">
-
-<!-- default option, no dependency badges. -->
-
-
-<!-- default option, no dependency badges. -->
-
 </div>
 <br>
 
@@ -855,7 +841,7 @@ Build secondBrain.git from the source and intsall dependencies:
 
 <!-- SHIELDS BADGE CURRENTLY DISABLED -->
 	```sh
-	❯ npm install
+	❯ bun install
 	```
 
 ### Usage
@@ -867,6 +853,16 @@ Run the project with:
 bun start
 ```
 
+![image](assets/branch.png)
+![image](assets/tags.png)
+![image](assets/mergeconflict.png)
+![image](assets/solvedmerge.png)
+![image](assets/rebase.png)
+![image](assets/gitpush.png)
+![image](assets/log1.png)
+![image](assets/log2.png)
+![image](assets/log3.png)
+![image](assets/log4.png)
 
 
 ---
