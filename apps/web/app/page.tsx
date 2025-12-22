@@ -18,26 +18,29 @@ export default function Home() {
         </h1>
 
         <p className="text-base sm:text-lg md:text-xl text-gray-400 mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed px-4">
-          Capture thoughts, organize ideas, and unlock insights with an AI-powered personal knowledge base.
+          Capture thoughts, organize ideas, and unlock insights with an
+          AI-powered personal knowledge base.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
           <Link
             href="/signup"
-            className="group w-full sm:w-auto px-6 sm:px-8 py-3 rounded-full bg-primary text-white font-medium hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
+            className="group w-full sm:w-auto px-6 sm:px-8 py-3 rounded-full bg-gray-400 text-black font-medium hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
           >
             Get Started
-            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            <ArrowRight
+              size={18}
+              className="group-hover:translate-x-1 transition-transform"
+            />
           </Link>
           <Link
             href="/login"
-            className="w-full sm:w-auto px-6 sm:px-8 py-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-center"
+            className="w-full sm:w-auto px-6 sm:px-8 py-3 rounded-full bg-gray-400 text-black border border-white/10 hover:bg-white/10 transition-colors text-center"
           >
             Sign In
           </Link>
         </div>
       </main>
-
     </div>
   );
 }
