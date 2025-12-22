@@ -852,13 +852,20 @@ Run the project with:
 ```sh
 bun start
 ```
-
+### Screen Shots
+**Branch**
 ![image](assets/branch.png)
+**Tags**
 ![image](assets/tags.png)
+**Merge Conflict**
 ![image](assets/mergeconflict.png)
+**Solved Merge**
 ![image](assets/solvedmerge.png)
+**Rebase**
 ![image](assets/rebase.png)
+**Git Push**
 ![image](assets/gitpush.png)
+**Git Log**
 ![image](assets/log1.png)
 ![image](assets/log2.png)
 ![image](assets/log3.png)
