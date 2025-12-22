@@ -40,7 +40,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen text-foreground  items-center justify-center bg-gradient-to-br from-gray-500 via-gray-700 to-gray-900 px-4 sm:px-6 relative overflow-hidden">
+    <div className="flex min-h-screen text-foreground  items-center justify-center bg-gradient-to-br from-gray-400 via-gray-700 to-gray-900 px-4 sm:px-6 relative overflow-hidden">
       {/* Decorative background */}
       <div className="absolute inset-0 bg-gradient-white opacity-30" />
       <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-primary/10 rounded-full blur-3xl" />
