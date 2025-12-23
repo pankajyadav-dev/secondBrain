@@ -853,19 +853,21 @@ Run the project with:
 bun start
 ```
 ### Screen Shots
-**Branch**
+### Branch graph
+![image](assets/graph.png)
+### Branch
 ![image](assets/branch.png)
-**Tags**
+### Tags
 ![image](assets/tags.png)
-**Merge Conflict**
+### Merge Conflict
 ![image](assets/mergeconflict.png)
-**Solved Merge**
+### Solved Merge
 ![image](assets/solvedmerge.png)
-**Rebase**
+### Rebase
 ![image](assets/rebase.png)
-**Git Push**
+### Git Push
 ![image](assets/gitpush.png)
-**Git Log**
+### Git Log
 ![image](assets/log1.png)
 ![image](assets/log2.png)
 ![image](assets/log3.png)
