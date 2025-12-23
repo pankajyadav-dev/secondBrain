@@ -3,59 +3,34 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build",
-        "^db:generate"
-      ],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        ".env*"
-      ],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**"
-      ],
-      "env": [
-        "DATABASE_URL"
-      ]
+      "dependsOn": ["^build", "^db:generate"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": ["DATABASE_URL", "NEXTAUTH_SECRET=123123123"]
     },
     "dev": {
-      "dependsOn": [
-        "^db:generate"
-      ],
+      "dependsOn": ["^db:generate"],
       "cache": false,
       "persistent": true,
-      "env": [
-        "DATABASE_URL"
-      ]
+      "env": ["DATABASE_URL"]
     },
     "lint": {
-      "dependsOn": [
-        "^lint"
-      ]
+      "dependsOn": ["^lint"]
     },
     "check-types": {
-      "dependsOn": [
-        "^check-types"
-      ]
+      "dependsOn": ["^check-types"]
     },
     "db:generate": {
       "cache": true,
-      "env": [
-        "DATABASE_URL"
-      ]
+      "env": ["DATABASE_URL"]
     },
     "db:migrate": {
       "cache": false,
-      "env": [
-        "DATABASE_URL"
-      ]
+      "env": ["DATABASE_URL"]
     },
     "db:deploy": {
       "cache": false,
-      "env": [
-        "DATABASE_URL"
-      ]
+      "env": ["DATABASE_URL"]
     }
   }
 }

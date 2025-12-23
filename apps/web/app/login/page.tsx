@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Lock, Mail, Sparkles } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { Input } from "@repo/ui/Input";
 import { Button } from "@repo/ui/Button";
 
@@ -32,7 +32,8 @@ export default function LoginPage() {
       } else {
         router.push("/dashboard");
       }
-    } catch (err) {
+    } catch (err: unknown) {
+      console.log(err);
       setError("Something went wrong");
     } finally {
       setLoading(false);
@@ -40,7 +41,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen text-foreground  items-center justify-center bg-gradient-to-br from-gray-400 via-gray-700 to-gray-900 px-4 sm:px-6 relative overflow-hidden">
+    <div className="flex min-h-screen text-foreground  items-center justify-center bg-linear-to-br from-gray-400 via-gray-700 to-gray-900 px-4 sm:px-6 relative overflow-hidden">
       {/* Decorative background */}
       <div className="absolute inset-0 bg-gradient-white opacity-30" />
       <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-primary/10 rounded-full blur-3xl" />
@@ -53,7 +54,7 @@ export default function LoginPage() {
             <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-green-300 mb-2">
               <Sparkles size={28} className="sm:w-8 sm:h-8 text-white" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-linear-to-b from-white to-white/50">
               Welcome Back
             </h2>
             <p className="text-xs sm:text-sm text-muted-foreground">
@@ -121,7 +122,7 @@ export default function LoginPage() {
           {/* Footer */}
           <div className="text-center text-sm">
             <p className="text-muted-foreground">
-              Don't have an account?{" "}
+              Dont have an account?{" "}
               <Link
                 href="/signup"
                 className="font-bold text-primary hover:text-white transition-smooth"

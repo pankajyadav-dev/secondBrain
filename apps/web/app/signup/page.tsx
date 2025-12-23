@@ -33,7 +33,7 @@ export default function SignupPage() {
             }
 
             router.push("/login");
-        } catch (err: any) {
+        } catch (err : any) {
             setError(err.message);
         } finally {
             setLoading(false);
@@ -41,7 +41,7 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="flex min-h-screen text-foreground  items-center justify-center bg-gradient-to-br from-blue-900 via-blue-400 to-purple-200 px-4 sm:px-6 relative overflow-hidden">
+        <div className="flex min-h-screen text-foreground  items-center justify-center bg-linear-to-br from-blue-900 via-blue-400 to-purple-200 px-4 sm:px-6 relative overflow-hidden">
             {/* Decorative background */}
             <div className="absolute inset-0 bg-gradient-radial opacity-30" />
             <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-primary/10 rounded-full blur-3xl" />
@@ -53,7 +53,7 @@ export default function SignupPage() {
                         <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-primary mb-2">
                             <Sparkles size={28} className="sm:w-8 sm:h-8 text-white" />
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50">
+                        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-linear-to-b from-white to-white/50">
                             Create account
                         </h2>
                         <p className="text-xs sm:text-sm text-gray-300">
